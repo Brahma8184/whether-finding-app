@@ -6,7 +6,7 @@ Features:-
 Search by city, town, village, or country name
 
 Shows:-
-City name and Country flag 🇺🇸
+City name and Country flag us
 Temperature 🌡️
 Weather description 🌤️
 Humidity 💧
