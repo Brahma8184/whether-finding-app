@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather App with Flags</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Styles */
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #6dd5ed, #2193b0);
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      width: 350px;
+      text-align: center;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+    }
+    .search-box {
+      margin-bottom: 20px;
+    }
+    #location-input {
+      padding: 10px;
+      width: 70%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    #search-button {
+      padding: 10px 15px;
+      border: none;
+      background: #2193b0;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .weather-box img {
+      width: 100px;
+      margin: 20px 0;
+    }
+    .temperature {
+      font-size: 2em;
+      font-weight: bold;
+    }
+    .description {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+    .weather-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: left;
+      margin-top: 20px;
+    }
+    .not-found {
+      color: red;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    .fadeIn {
+      animation: fadeIn 1s ease forwards;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+    .city-flag {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .city-flag img {
+      width: 30px;
+      height: 20px;
+      object-fit: cover;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="search-box">
+    <input type="text" id="location-input" placeholder="Enter village, town, city, or country...">
+    <button id="search-button">Search</button>
+  </div>
+
+  <div class="city-flag" style="display:none;">
+    <h2 class="city-name"></h2>
+    <img class="country-flag" src="" alt="Country Flag">
+  </div>
+
+  <div class="weather-box" style="display: none;">
+    <img src="" alt="weather-icon">
+    <p class="temperature"></p>
+    <p class="description"></p>
+  </div>
+
+  <div class="weather-details" style="display: none;">
+    <div class="humidity">Humidity: <span></span></div>
+    <div class="wind">Wind: <span></span></div>
+    <div class="pressure-details">Pressure: <span></span></div>
+    <div class="visibility-details">Visibility: <span></span></div>
+  </div>
+
+  <div class="not-found" style="display: none;">
+    <p>Location not found 😢</p>
+  </div>
+</div>
+
+<script>
+document.getElementById("location-input").addEventListener("keyup", function (event) {
+  if (event.key === "Enter") {
+    document.getElementById("search-button").click();
+  }
+});
+
+const searchButton = document.getElementById("search-button");
+const container = document.querySelector('.container');
+const weatherBox = document.querySelector('.weather-box');
+const weatherDetails = document.querySelector('.weather-details');
+const error404 = document.querySelector('.not-found');
+const cityFlag = document.querySelector('.city-flag');
+const cityName = document.querySelector('.city-name');
+const countryFlag = document.querySelector('.country-flag');
+
+searchButton.addEventListener('click', async () => {
+  const apiKey = 'db36b89964b3e71f2af263de5f8dc89d'; // your API key
+  const location = document.getElementById('location-input').value.trim();
+
+  if (location === '') {
+    alert('Please enter a location!');
+    return;
+  }
+
+  try {
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&units=metric&appid=${apiKey}`);
+    const data = await response.json();
+
+    if (data.cod === 404 || data.cod === '404') {
+      showError();
+      return;
+    }
+
+    hideError();
+    updateWeather(data);
+
+  } catch (error) {
+    console.error(error);
+    alert('Unable to fetch weather. Check your internet connection or API Key!');
+  }
+});
+
+function showError() {
+  container.style.height = '400px';
+  weatherBox.style.display = 'none';
+  weatherDetails.style.display = 'none';
+  cityFlag.style.display = 'none';
+  error404.style.display = 'block';
+  error404.classList.add('fadeIn');
+}
+
+function hideError() {
+  error404.style.display = 'none';
+  error404.classList.remove('fadeIn');
+}
+
+function updateWeather(data) {
+  const weatherIcon = document.querySelector('.weather-box img');
+  const temperature = document.querySelector('.weather-box .temperature');
+  const description = document.querySelector('.weather-box .description');
+  const humidity = document.querySelector('.weather-details .humidity span');
+  const wind = document.querySelector('.weather-details .wind span');
+  const pressure = document.querySelector('.weather-details .pressure-details span');
+  const visibility = document.querySelector('.weather-details .visibility-details span');
+
+  // Show City Name and Country Flag
+  cityFlag.style.display = 'flex';
+  cityName.textContent = data.name + ',';
+  countryFlag.src = `https://flagsapi.com/${data.sys.country}/flat/64.png`;
+  countryFlag.alt = data.sys.country;
+
+  // 🔵 Set weather icon dynamically using OpenWeather API
+  const iconCode = data.weather[0].icon; // example: 10d, 01n etc
+  weatherIcon.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+  weatherIcon.alt = data.weather[0].description;
+
+  temperature.innerHTML = `${Math.round(data.main.temp)}<span>°C</span>`;
+  description.innerHTML = data.weather[0].description;
+  humidity.innerHTML = `${data.main.humidity}%`;
+  wind.innerHTML = `${Math.round(data.wind.speed)} Km/h`;
+  pressure.innerHTML = `${data.main.pressure} mb`;
+  visibility.innerHTML = `${(data.visibility / 1000).toFixed(1)} km`;
+
+  weatherBox.style.display = 'block';
+  weatherDetails.style.display = 'flex';
+  weatherBox.classList.add('fadeIn');
+  weatherDetails.classList.add('fadeIn');
+  container.style.height = 'auto';
+}
+</script>
+
+</body>
+</html>
